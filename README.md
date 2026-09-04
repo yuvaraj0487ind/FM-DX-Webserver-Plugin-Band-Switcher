@@ -1,3 +1,5 @@
+<img width="1194" height="494" alt="image" src="https://github.com/user-attachments/assets/9a6ad0ed-d8bd-4d9b-b1db-21dcdd505e3d" />
+
 # Band Switcher Plugin for FM-DX Webserver
 
 **Version:** 1.8.4
