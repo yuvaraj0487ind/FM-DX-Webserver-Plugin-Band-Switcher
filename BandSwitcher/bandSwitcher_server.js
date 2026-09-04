@@ -13,7 +13,7 @@
 
 'use strict';
 
-const pluginVersion = '1.8.4';
+const pluginVersion = '1.8.5';
 const pluginName = 'Band Switcher';
 
 const fs = require('fs');
