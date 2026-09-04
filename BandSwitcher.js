@@ -7,7 +7,7 @@
 const pluginConfig = {
     name: 'Band Switcher',
     author: 'Custom',
-    version: '1.8.4',
+    version: '1.8.5',
     description: 'Broadcast band dropdown integrated into the tune bar',
     frontEndPath: 'BandSwitcher/bandSwitcher.js'
 };
