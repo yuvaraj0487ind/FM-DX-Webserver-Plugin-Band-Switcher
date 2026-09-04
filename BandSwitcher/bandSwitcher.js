@@ -23,7 +23,7 @@
 'use strict';
 
 const pluginName = 'Band Switcher';
-const pluginVersion = '1.8.4';
+const pluginVersion = '1.8.5';
 
 // ─── Band definitions ──────────────────────────────────────────
 // freq  : default tune point (MHz)
@@ -158,7 +158,18 @@ function checkSpectrumAvailability() {
 }
 
 // ─── Send tune command ─────────────────────────────────────────
+// Use the webserver's own tuneTo() function when available, so we
+// share the same socket reference the webserver uses internally.
+// The webserver's reconnect logic in main.js reassigns the bare
+// `socket` variable but does NOT update window.socket, so accessing
+// window.socket directly can send to a dead socket after a reconnect.
 function sendTuneCommand(freqMHz) {
+    if (typeof tuneTo === 'function') {
+        tuneTo(freqMHz);
+        logInfo(`Tune via tuneTo(): ${freqMHz} MHz`);
+        return true;
+    }
+    // Fallback: use window.socket directly
     const sock = window.socket;
     if (sock && sock.readyState === WebSocket.OPEN) {
         const freqKHz = Math.round(freqMHz * 1000);
