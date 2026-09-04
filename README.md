@@ -4,7 +4,7 @@
 
 # Band Switcher Plugin for FM-DX Webserver
 
-**Version:** 1.8.4
+**Version:** 1.8.5
 
 A compact dropdown integrated into the tune bar that tunes the radio to a broadcast band and optionally triggers a Spectrum Graph scan. Includes an inline band editor for admins. Designed to work equally well on desktop and mobile, and to coexist with other plugins that inject buttons into the tune bar (e.g. scanner plugins).
 
@@ -47,6 +47,7 @@ Band editing is always admin-only, even if the tuner is public or unlocked. The 
 
 - FM-DX Webserver v1.4.0b or later
 - **Spectrum Graph plugin** (optional) — required for scanning. Without it, the dropdown still tunes.
+- **Tuning limits must cover the bands you want to use** — if the webserver's `tuningLimit` is enabled and the configured `tuningLowerLimit`/`tuningUpperLimit` range only covers FM (e.g. 87.5–108 MHz), the server will silently reject tune commands for LW, MW, and SW bands. Set `tuningLimit: false` or widen the range to cover the full supported spectrum (e.g. 0.144–108 MHz for TEF6687).
 
 ## Installation
 
@@ -83,7 +84,7 @@ Band editing is always admin-only, even if the tuner is public or unlocked. The 
 
 ## How It Works
 
-1. Clicking a band calls `tuneTo(freq)` which sends `T<freq_kHz>` via the main `/text` WebSocket
+1. Clicking a band calls the webserver's own `tuneTo(freq)` function, which sends `T<freq_kHz>` via the main `/text` WebSocket. Using `tuneTo()` directly (instead of accessing `window.socket`) ensures tune commands survive WebSocket reconnections.
 2. The server validates the tune command using the same permission model as the webserver's own `tuneTo()` — the client does not perform its own permission checks
 3. After a 1.5-second settle delay, if the Spectrum Graph is available, a scan command is sent via the `/data_plugins` WebSocket:
    ```json
@@ -97,7 +98,7 @@ Band editing is always admin-only, even if the tuner is public or unlocked. The 
      }
    }
    ```
-4. The Spectrum Graph server reads `freqLow`/`freqHigh` to set its display range
+4. The Spectrum Graph server reads `freqLow`/`freqHigh` to set its display range (if supported by the Spectrum Graph version)
 5. The dropdown label shows a spinning icon during scan, then updates to the active band name
 
 ## Active Band Detection
@@ -110,7 +111,9 @@ The webserver's `buttons.css` defines `#tune-buttons button { width: 25%; }` (sp
 
 ## Known Limitations
 
-- **Spectrum Graph 64 MHz floor:** The Spectrum Graph server has a hardcoded check (`pluginSpectrumGraph_server.js` line 335) that forces all scan start frequencies below 64 MHz up to 64 MHz. This means LW, MW, and SW sub-band scans may not display the correct frequency range on the spectrum graph. This is a limitation of the Spectrum Graph plugin, not of Band Switcher.
+- **Spectrum Graph scan range:** The Spectrum Graph server determines the scan range from the webserver's configured `tuningLowerLimit`/`tuningUpperLimit` settings, not from the `freqLow`/`freqHigh` fields sent by Band Switcher. The scan will always use the webserver's configured range. This is a limitation of the Spectrum Graph plugin.
+- **Spectrum Graph 64 MHz floor:** The Spectrum Graph server has a hardcoded check (`pluginSpectrumGraph_server.js` line 335) that forces all scan start frequencies below 64 MHz up to 64 MHz. LW, MW, and SW sub-band scans will not display the correct frequency range on the spectrum graph.
+- **Webserver tuning limits:** If `tuningLimit` is enabled in the webserver config and the range only covers FM, tune commands for non-FM bands are silently rejected by the server. Disable `tuningLimit` or widen the range.
 - **Active band on first load:** The `#data-frequency` span starts empty until the first WebSocket message arrives. The dropdown shows "Band" until the radio reports its frequency.
 
 ## Files
@@ -144,6 +147,10 @@ Example structure:
 | POST   | `/band-switcher-plugin/api/config` | Admin | Updates the band list (validates)  |
 
 ## Changelog
+
+### v1.8.5
+- Tune command now calls the webserver's own `tuneTo()` function instead of accessing `window.socket` directly, preventing silent failures after WebSocket reconnections
+- Added `tuningLimit` requirement note to documentation
 
 ### v1.8.4
 - Fixed CSS specificity: all tune bar selectors now use `#tune-buttons >` (direct child) to beat the webserver's `#tune-buttons button { width: 25%; }` rule
