@@ -169,3 +169,7 @@ Example structure:
 - Inline band editor (replaced external modal that was hidden by webserver CSS)
 - Admin-only editing enforced on both client and server
 - Config broadcast to all clients via `/data_plugins` WebSocket
+
+## Acknowledgements
+
+This plugin was developed with assistance from [Sarvam AI](https://sarvam.ai).
